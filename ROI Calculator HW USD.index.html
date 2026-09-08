@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de ROI · SIRIOS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#F5F7FA;
+    --surface:#FFFFFF;
+    --ink:#16212E;
+    --ink-muted:#5B6675;
+    --ink-faint:#8A93A1;
+    --border:#E1E6EC;
+    --navy:#0F1B2B;
+    --navy-soft:#1B2C40;
+    --teal:#17B8AC;
+    --teal-deep:#0E8C82;
+    --amber:#D98E2B;
+    --rose:#C4574B;
+    --radius-sm:4px;
+    --radius-md:6px;
+    font-size:16px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', -apple-system, Segoe UI, sans-serif;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.num-display,.hero-number{
+    font-family:'Space Grotesk', 'IBM Plex Sans', sans-serif;
+  }
+
+  .app{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:16px;flex-wrap:wrap;
+    margin-bottom:22px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--border);
+  }
+  header.top h1{
+    font-size:1.5rem;font-weight:600;margin:0 0 4px;color:var(--navy);
+    letter-spacing:-0.01em;
+  }
+  header.top p{margin:0;color:var(--ink-muted);font-size:0.92rem;max-width:520px;}
+  .currency-badge{
+    font-size:0.72rem;font-weight:600;color:var(--teal-deep);
+    background:#E7F7F5;border:1px solid #BFEBE6;
+    padding:4px 10px;border-radius:999px;white-space:nowrap;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:330px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Input panel ---------- */
+  .panel-inputs{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:20px;
+    position:sticky;
+    top:20px;
+  }
+  @media (max-width:900px){ .panel-inputs{position:static;} }
+
+  .panel-inputs h2{
+    font-size:0.98rem;font-weight:600;margin:0 0 14px;color:var(--navy);
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:0.82rem;font-weight:500;color:var(--ink);
+    margin-bottom:5px;
+  }
+  .field .input-wrap{
+    display:flex;align-items:center;
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:#FBFCFD;
+    overflow:hidden;
+  }
+  .field .input-wrap:focus-within{
+    border-color:var(--teal);box-shadow:0 0 0 3px #17B8AC22;
+  }
+  .field .input-wrap .prefix{
+    padding:9px 10px;color:var(--ink-faint);font-size:0.85rem;border-right:1px solid var(--border);
+    background:#F1F4F7;flex:0 0 auto;
+  }
+  .field input[type=number]{
+    border:none;background:transparent;padding:9px 10px;
+    font-size:0.95rem;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);
+    width:100%;min-width:0;
+  }
+  .field input[type=number]:focus{outline:none;}
+  .field .helper{
+    margin-top:5px;font-size:0.74rem;color:var(--ink-faint);
+  }
+  .field .input-wrap + .input-wrap{
+    margin-top:6px;
+  }
+  .field .suffix{
+    padding:9px 10px;color:var(--ink-faint);font-size:0.8rem;border-left:1px solid var(--border);
+    background:#F1F4F7;flex:0 0 auto;white-space:nowrap;
+  }
+
+  .price-field .input-wrap{border-color:#D8DEE6;}
+
+  hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+  .lines-heading{
+    font-size:0.78rem;font-weight:600;color:var(--ink-muted);
+    text-transform:none;margin:0 0 10px;
+  }
+
+  details.advanced{
+    margin-top:16px;border-top:1px solid var(--border);padding-top:14px;
+  }
+  details.advanced summary{
+    cursor:pointer;font-size:0.82rem;font-weight:500;color:var(--teal-deep);
+    list-style:none;display:flex;align-items:center;gap:6px;
+  }
+  details.advanced summary::-webkit-details-marker{display:none;}
+  details.advanced summary::before{
+    content:'▸';font-size:0.7rem;transition:transform .15s ease;color:var(--teal-deep);
+  }
+  details.advanced[open] summary::before{transform:rotate(90deg);}
+  details.advanced .adv-body{padding-top:14px;}
+  details.advanced .adv-note{font-size:0.74rem;color:var(--ink-faint);margin:0 0 12px;}
+
+  button.reset-btn{
+    width:100%;margin-top:18px;
+    background:transparent;border:1px solid var(--border);color:var(--ink-muted);
+    padding:9px;border-radius:var(--radius-sm);font-size:0.82rem;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  button.reset-btn:hover{border-color:var(--ink-faint);color:var(--ink);}
+
+  /* ---------- Results panel ---------- */
+  .panel-results{display:flex;flex-direction:column;gap:18px;}
+
+  .hero{
+    background:var(--navy);
+    border-radius:var(--radius-md);
+    padding:26px 28px;
+    color:#fff;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;
+  }
+  .hero .hero-label{
+    font-size:0.82rem;color:#9FB3C8;margin:0 0 6px;font-weight:500;
+  }
+  .hero .hero-number{
+    font-size:2.6rem;font-weight:700;color:#fff;line-height:1;
+    letter-spacing:-0.01em;
+  }
+  .hero .hero-number span.unit{
+    font-size:1.1rem;font-weight:500;color:#9FB3C8;margin-left:8px;
+  }
+  .hero .hero-sub{font-size:0.8rem;color:#7E93AA;margin-top:8px;max-width:360px;}
+  .hero .hero-warning{
+    font-size:0.85rem;color:#F3C6C0;max-width:360px;line-height:1.5;
+  }
+  .hero .print-btn{
+    background:var(--teal);color:var(--navy);border:none;
+    padding:10px 16px;border-radius:var(--radius-sm);font-weight:600;
+    font-size:0.82rem;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;
+    white-space:nowrap;
+  }
+  .hero .print-btn:hover{background:#22CABD;}
+
+  .stats-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+  }
+  @media (max-width:700px){ .stats-row{grid-template-columns:repeat(2,1fr);} }
+  .stat-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:14px 16px;
+  }
+  .stat-card .stat-label{font-size:0.72rem;color:var(--ink-muted);margin:0 0 6px;}
+  .stat-card .stat-value{font-size:1.25rem;font-weight:600;color:var(--navy);font-family:'Space Grotesk',sans-serif;}
+  .stat-card.negative .stat-value{color:var(--rose);}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:20px;
+  }
+  .card h3{
+    font-size:0.95rem;font-weight:600;color:var(--navy);margin:0 0 4px;
+  }
+  .card .card-sub{font-size:0.78rem;color:var(--ink-faint);margin:0 0 14px;}
+
+  .chart-wrap{width:100%;overflow-x:auto;}
+  .chart-wrap svg{width:100%;height:auto;display:block;min-width:520px;}
+
+  /* ---------- Breakdown table ---------- */
+  table.breakdown{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  table.breakdown th{
+    text-align:left;font-weight:500;color:var(--ink-faint);font-size:0.72rem;
+    padding:0 8px 8px;border-bottom:1px solid var(--border);
+  }
+  table.breakdown th.num, table.breakdown td.num{text-align:right;}
+  table.breakdown td{padding:10px 8px;border-bottom:1px solid #EEF1F4;vertical-align:middle;}
+  table.breakdown tr.total-row td{
+    border-top:1px solid var(--ink);border-bottom:none;font-weight:600;color:var(--navy);
+    padding-top:12px;
+  }
+  table.breakdown tr.dep-row td{color:var(--ink-muted);font-style:italic;}
+  .line-name{display:flex;align-items:center;gap:8px;}
+  .swatch{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+  .minibar-cell{width:110px;}
+  .minibar-track{background:#EEF1F4;height:6px;border-radius:3px;overflow:hidden;}
+  .minibar-fill{height:100%;border-radius:3px;}
+
+  .disclaimer{
+    font-size:0.74rem;color:var(--ink-faint);line-height:1.6;
+    padding-top:4px;
+  }
+  .footer-credit{
+    font-size:0.74rem;color:var(--ink-faint);
+    border-top:1px solid var(--border);
+    margin-top:6px;padding-top:14px;
+  }
+
+  @media print{
+    body{background:#fff;}
+    .panel-inputs, .print-btn{display:none !important;}
+    .layout{grid-template-columns:1fr;}
+    .hero{background:#fff;color:var(--ink);border:1px solid var(--border);}
+    .hero .hero-label, .hero .hero-sub{color:var(--ink-muted);}
+    .hero .hero-number, .hero .hero-number span.unit{color:var(--ink);}
+    .card, .stat-card{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div>
+      <h1>Calculadora de ROI · Escáner intraoral</h1>
+      <p>Proyección de retorno de inversión frente a impresión convencional, por línea de tratamiento.</p>
+    </div>
+    <span class="currency-badge">Montos en USD</span>
+  </header>
+
+  <div class="layout">
+
+    <!-- INPUT PANEL -->
+    <section class="panel-inputs">
+      <h2>Datos del consultorio</h2>
+
+      <div class="field price-field">
+        <label for="price">Precio del escáner</label>
+        <div class="input-wrap">
+          <span class="prefix">US$</span>
+          <input type="number" id="price" min="0" step="500" value="15000" inputmode="numeric">
+        </div>
+        <p class="helper">Ejemplo — ajusta al precio vigente de SIRIOS en tu país.</p>
+      </div>
+
+      <hr class="sep">
+
+      <p class="lines-heading">Casos por mes (volumen actual del dentista)</p>
+      <div id="linesInputs"></div>
+
+      <details class="advanced" id="advToggle">
+        <summary>Ajustes avanzados</summary>
+        <div class="adv-body">
+          <p class="adv-note">Estos valores rara vez cambian, pero varían por país. Ajusta solo si el dentista te da cifras distintas.</p>
+          <div class="field">
+            <label for="dentistRate">Tarifa por hora del dentista</label>
+            <div class="input-wrap">
+              <span class="prefix">US$</span>
+              <input type="number" id="dentistRate" min="0" step="1" value="50">
+              <span class="suffix">/hora</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="assistantRate">Tarifa por hora del asistente</label>
+            <div class="input-wrap">
+              <span class="prefix">US$</span>
+              <input type="number" id="assistantRate" min="0" step="1" value="8">
+              <span class="suffix">/hora</span>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="depYears">Vida útil del escáner (depreciación)</label>
+            <div class="input-wrap">
+              <input type="number" id="depYears" min="1" step="1" value="5">
+              <span class="suffix">años</span>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <button class="reset-btn" id="resetBtn" type="button">Restablecer valores</button>
+    </section>
+
+    <!-- RESULTS PANEL -->
+    <section class="panel-results">
+
+      <div class="hero">
+        <div>
+          <p class="hero-label">Punto de equilibrio</p>
+          <div id="heroNumber" class="hero-number">—</div>
+          <div id="heroSub"></div>
+        </div>
+        <button class="print-btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+      </div>
+
+      <div class="stats-row" id="statsRow"></div>
+
+      <div class="card">
+        <h3>Retorno de inversión en el tiempo</h3>
+        <p class="card-sub">Posición neta acumulada desde la compra del escáner hasta que el ahorro digital cubre la inversión.</p>
+        <div class="chart-wrap">
+          <svg id="roiChart" viewBox="0 0 780 360"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Desglose por línea de tratamiento</h3>
+        <p class="card-sub">Ganancia incremental mensual por tipo de caso. El ingreso es de referencia — el punto de equilibrio depende solo del ahorro de costo y tiempo, no de la tarifa.</p>
+        <table class="breakdown" id="breakdownTable"></table>
+      </div>
+
+      <p class="disclaimer" id="disclaimerText"></p>
+      <p class="footer-credit">Calculadora elaborada por Hector Wing</p>
+
+    </section>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   DATOS BASE POR LÍNEA DE TRATAMIENTO
+   Origen: comparación analógico vs. digital (tiempos, materiales,
+   remakes y envíos por caso). La tarifa por caso no se incluye
+   en el cálculo de ROI porque se asume igual en ambos flujos:
+   el beneficio proviene del ahorro de costo y tiempo, no de un
+   cambio de precio al paciente.
+--------------------------------------------------------- */
+const LINES = [
+  { id:'cb', name:'Coronas y puentes', defaultVol:20, defaultFee:400, color:'#17B8AC',
+    analog:  { dentist:62, assistant:71, total:103, mat:25,   ship:16.5, rem:40 },
+    digital: { dentist:51, assistant:55, total:76,  mat:2.5,  ship:0,    rem:40 } },
+  { id:'partials', name:'Dentaduras parciales', defaultVol:5, defaultFee:900, color:'#3B6E91',
+    analog:  { dentist:97, assistant:90, total:156, mat:25,   ship:16.5, rem:40 },
+    digital: { dentist:80, assistant:61, total:110, mat:10.5, ship:0,    rem:5  } },
+  { id:'implant', name:'Implantes unitarios', defaultVol:5, defaultFee:1000, color:'#D98E2B',
+    analog:  { dentist:95, assistant:20, total:95,  mat:25,   ship:16.5, rem:40 },
+    digital: { dentist:80, assistant:20, total:80,  mat:50,   ship:0,    rem:40 } },
+  { id:'aligners', name:'Alineadores', defaultVol:1, defaultFee:1500, color:'#8C5383',
+    analog:  { dentist:101, assistant:110, total:181, mat:25,  ship:16.5, rem:40 },
+    digital: { dentist:87,  assistant:70,  total:126, mat:15.5,ship:0,    rem:6.5} },
+  { id:'nightguards', name:'Guardas nocturnas', defaultVol:5, defaultFee:100, color:'#5B6675',
+    analog:  { dentist:21, assistant:65, total:71, mat:16,   ship:16.5, rem:16 },
+    digital: { dentist:17, assistant:25, total:26, mat:15.5, ship:0,    rem:6.5} },
+];
+
+const DEFAULTS = { price:15000, dentistRate:50, assistantRate:8, depYears:5 };
+
+/* ---------------------------------------------------------
+   HELPERS
+--------------------------------------------------------- */
+const fmtUSD = (n, decimals=0) => {
+  const sign = n < 0 ? '−' : '';
+  return sign + '$' + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+};
+const fmtTime = (min) => {
+  const m = Math.round(Math.abs(min));
+  const h = Math.floor(m/60), r = m%60;
+  const sign = min < 0 ? '−' : '';
+  if (h === 0) return `${sign}${r} min`;
+  return `${sign}${h}h ${r}min`;
+};
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+/* ---------------------------------------------------------
+   BUILD INPUT ROWS FOR EACH LINE
+--------------------------------------------------------- */
+const linesContainer = document.getElementById('linesInputs');
+LINES.forEach(line => {
+  const div = document.createElement('div');
+  div.className = 'field';
+  div.innerHTML = `
+    <label for="vol-${line.id}">${line.name}</label>
+    <div class="input-wrap">
+      <input type="number" id="vol-${line.id}" min="0" step="1" value="${line.defaultVol}" inputmode="numeric">
+      <span class="suffix">casos/mes</span>
+    </div>
+    <div class="input-wrap">
+      <span class="prefix">US$</span>
+      <input type="number" id="fee-${line.id}" min="0" step="10" value="${line.defaultFee}" inputmode="numeric">
+      <span class="suffix">/caso</span>
+    </div>
+    <p class="helper" id="hint-${line.id}"></p>
+  `;
+  linesContainer.appendChild(div);
+});
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+function readState(){
+  const vols = {};
+  const fees = {};
+  LINES.forEach(l => {
+    vols[l.id] = Math.max(0, Number(document.getElementById(`vol-${l.id}`).value) || 0);
+    fees[l.id] = Math.max(0, Number(document.getElementById(`fee-${l.id}`).value) || 0);
+  });
+  return {
+    price: Math.max(0, Number(document.getElementById('price').value) || 0),
+    dentistRate: Math.max(0, Number(document.getElementById('dentistRate').value) || 0),
+    assistantRate: Math.max(0, Number(document.getElementById('assistantRate').value) || 0),
+    depYears: Math.max(1, Number(document.getElementById('depYears').value) || 1),
+    vols,
+    fees
+  };
+}
+
+/* ---------------------------------------------------------
+   CORE CALCULATION
+   (replica la metodología de la calculadora fuente: la
+   depreciación del escáner se prorratea sobre su vida útil
+   y se resta de la ganancia mensual antes de calcular el
+   punto de equilibrio — un enfoque conservador a propósito)
+--------------------------------------------------------- */
+function computeResults(state){
+  let totalProfitMonth = 0;
+  let totalTimeSavedMonth = 0;
+  let totalRevenueMonth = 0;
+  const lineResults = LINES.map(line => {
+    const vol = state.vols[line.id];
+    const fee = state.fees[line.id];
+    const matA = line.analog.mat + line.analog.ship + line.analog.rem;
+    const matD = line.digital.mat + line.digital.ship + line.digital.rem;
+    const laborA = (line.analog.dentist/60)*state.dentistRate + (line.analog.assistant/60)*state.assistantRate;
+    const laborD = (line.digital.dentist/60)*state.dentistRate + (line.digital.assistant/60)*state.assistantRate;
+    const costA = matA + laborA, costD = matD + laborD;
+    const savingPerCase = costA - costD;
+    const timeSavedPerCase = line.analog.total - line.digital.total;
+    const profitMonth = savingPerCase * vol;
+    const timeSavedMonth = timeSavedPerCase * vol;
+    const revenueMonth = fee * vol;
+    totalProfitMonth += profitMonth;
+    totalTimeSavedMonth += timeSavedMonth;
+    totalRevenueMonth += revenueMonth;
+    return { ...line, vol, fee, savingPerCase, timeSavedPerCase, profitMonth, timeSavedMonth, revenueMonth };
+  });
+
+  const depMonths = state.depYears * 12;
+  const depreciationMonthly = depMonths > 0 ? state.price / depMonths : 0;
+  const netMonthly = totalProfitMonth - depreciationMonthly;
+  const breakevenMonths = netMonthly > 0 ? state.price / netMonthly : null;
+
+  return { lineResults, totalProfitMonth, totalRevenueMonth, depreciationMonthly, netMonthly, breakevenMonths, totalTimeSavedMonth, price: state.price };
+}
+
+/* ---------------------------------------------------------
+   RENDER: HERO
+--------------------------------------------------------- */
+function renderHero(r){
+  const heroNumber = document.getElementById('heroNumber');
+  const heroSub = document.getElementById('heroSub');
+  if (r.breakevenMonths !== null){
+    heroNumber.innerHTML = `${r.breakevenMonths.toFixed(1)}<span class="unit">meses</span>`;
+    heroSub.innerHTML = `<p class="hero-sub">Con este volumen, el ahorro digital cubre el costo del escáner en ${r.breakevenMonths.toFixed(1)} meses.</p>`;
+  } else {
+    heroNumber.textContent = '—';
+    heroSub.innerHTML = `<p class="hero-warning">Con estos valores el ahorro mensual no cubre la depreciación del escáner. Sube el volumen de casos o revisa el precio para ver el punto de equilibrio.</p>`;
+  }
+}
+
+/* ---------------------------------------------------------
+   RENDER: STATS ROW
+--------------------------------------------------------- */
+function renderStats(r){
+  const el = document.getElementById('statsRow');
+  const items = [
+    { label:'Ganancia neta / mes', value: fmtUSD(r.netMonthly), neg: r.netMonthly < 0 },
+    { label:'Ganancia neta / año', value: fmtUSD(r.netMonthly*12), neg: r.netMonthly < 0 },
+    { label:'Tiempo ahorrado / mes', value: fmtTime(r.totalTimeSavedMonth), neg:false },
+    { label:'Tiempo ahorrado / año', value: fmtTime(r.totalTimeSavedMonth*12), neg:false },
+  ];
+  el.innerHTML = items.map(it => `
+    <div class="stat-card ${it.neg ? 'negative':''}">
+      <p class="stat-label">${it.label}</p>
+      <p class="stat-value">${it.value}</p>
+    </div>
+  `).join('');
+}
+
+/* ---------------------------------------------------------
+   RENDER: CHART (SVG, generado a mano — la curva es lineal
+   porque la ganancia mensual neta es constante)
+--------------------------------------------------------- */
+function renderChart(r){
+  const svg = document.getElementById('roiChart');
+  const W = 780, H = 360;
+  const marginLeft = 74, marginRight = 20, marginTop = 20, marginBottom = 40;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+
+  let monthsToShow;
+  if (r.breakevenMonths !== null){
+    monthsToShow = clamp(Math.ceil(r.breakevenMonths * 2.2), 12, 36);
+  } else {
+    monthsToShow = 24;
+  }
+
+  const startValue = -r.price;
+  const endValue = startValue + r.netMonthly * monthsToShow;
+  const zeroCross = r.breakevenMonths !== null && r.breakevenMonths <= monthsToShow ? r.breakevenMonths : null;
+
+  let yMin = Math.min(startValue, endValue, 0);
+  let yMax = Math.max(startValue, endValue, 0);
+  const span = (yMax - yMin) || Math.abs(startValue) || 1000;
+  yMin -= span * 0.12;
+  yMax += span * 0.12;
+
+  const xScale = m => marginLeft + (m / monthsToShow) * plotW;
+  const yScale = v => marginTop + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+  const yZero = yScale(0);
+
+  // --- gridlines (horizontal, 4 divisions) ---
+  let gridLines = '';
+  let yLabels = '';
+  const ticks = 4;
+  for (let i=0; i<=ticks; i++){
+    const val = yMin + (i/ticks)*(yMax-yMin);
+    const y = yScale(val);
+    gridLines += `<line x1="${marginLeft}" y1="${y}" x2="${W-marginRight}" y2="${y}" stroke="#EEF1F4" stroke-width="1"/>`;
+    yLabels += `<text x="${marginLeft-10}" y="${y+3}" text-anchor="end" font-size="10.5" fill="#8A93A1" font-family="IBM Plex Sans">${fmtUSD(val)}</text>`;
+  }
+
+  // --- x axis month labels ---
+  let xLabels = '';
+  const xStep = Math.max(1, Math.ceil(monthsToShow/6));
+  for (let m=0; m<=monthsToShow; m+=xStep){
+    xLabels += `<text x="${xScale(m)}" y="${H-marginBottom+20}" text-anchor="middle" font-size="10.5" fill="#8A93A1" font-family="IBM Plex Sans">${m}</text>`;
+  }
+  xLabels += `<text x="${W-marginRight}" y="${H-4}" text-anchor="end" font-size="10" fill="#8A93A1" font-family="IBM Plex Sans">meses</text>`;
+
+  // --- zero baseline ---
+  const baseline = `<line x1="${marginLeft}" y1="${yZero}" x2="${W-marginRight}" y2="${yZero}" stroke="#C7CFD8" stroke-width="1.2"/>`;
+
+  // --- fills + line path ---
+  let fills = '', linePath = '';
+  const x0 = xScale(0), xEnd = xScale(monthsToShow);
+  const yStart = yScale(startValue), yEnd = yScale(endValue);
+
+  if (zeroCross !== null){
+    const xBE = xScale(zeroCross);
+    fills += `<path d="M${x0},${yZero} L${x0},${yStart} L${xBE},${yZero} Z" fill="#C4574B" fill-opacity="0.14"/>`;
+    fills += `<path d="M${xBE},${yZero} L${xEnd},${yEnd} L${xEnd},${yZero} Z" fill="#17B8AC" fill-opacity="0.16"/>`;
+    linePath = `<path d="M${x0},${yStart} L${xBE},${yZero} L${xEnd},${yEnd}" fill="none" stroke="#0F1B2B" stroke-width="2.5" stroke-linejoin="round"/>`;
+  } else {
+    fills += `<path d="M${x0},${yZero} L${x0},${yStart} L${xEnd},${yEnd} L${xEnd},${yZero} Z" fill="#C4574B" fill-opacity="0.14"/>`;
+    linePath = `<path d="M${x0},${yStart} L${xEnd},${yEnd}" fill="none" stroke="#C4574B" stroke-width="2.5" stroke-linejoin="round"/>`;
+  }
+
+  // --- breakeven marker ---
+  let marker = '';
+  if (zeroCross !== null){
+    const xBE = xScale(zeroCross);
+    marker = `
+      <line x1="${xBE}" y1="${marginTop}" x2="${xBE}" y2="${yZero}" stroke="#17B8AC" stroke-width="1" stroke-dasharray="3,3"/>
+      <circle cx="${xBE}" cy="${yZero}" r="4.5" fill="#17B8AC" stroke="#fff" stroke-width="1.5"/>
+      <text x="${xBE}" y="${marginTop-6}" text-anchor="middle" font-size="11" font-weight="600" fill="#0F1B2B" font-family="IBM Plex Sans">Equilibrio: ${zeroCross.toFixed(1)} m</text>
+    `;
+  }
+
+  // --- start/end value labels ---
+  const endLabel = `<text x="${xEnd-4}" y="${yEnd - 10}" text-anchor="end" font-size="11" font-weight="600" fill="${endValue>=0?'#0E8C82':'#C4574B'}" font-family="IBM Plex Sans">${fmtUSD(endValue)}</text>`;
+  const startLabel = `<text x="${x0+4}" y="${yStart + (yStart>H-30?-8:16)}" text-anchor="start" font-size="10.5" fill="#8A93A1" font-family="IBM Plex Sans">−${fmtUSD(r.price).slice(1)}</text>`;
+
+  svg.innerHTML = gridLines + yLabels + baseline + fills + linePath + marker + xLabels + endLabel + startLabel;
+}
+
+/* ---------------------------------------------------------
+   RENDER: BREAKDOWN TABLE
+--------------------------------------------------------- */
+function renderTable(r){
+  const el = document.getElementById('breakdownTable');
+  const maxAbs = Math.max(...r.lineResults.map(l => Math.abs(l.profitMonth)), Math.abs(r.depreciationMonthly), 1);
+
+  const rows = r.lineResults.map(l => `
+    <tr>
+      <td><div class="line-name"><span class="swatch" style="background:${l.color}"></span>${l.name}</div></td>
+      <td class="num">${l.vol}</td>
+      <td class="num">${fmtUSD(l.revenueMonth)}</td>
+      <td class="num">${fmtUSD(l.profitMonth)}</td>
+      <td class="num">${fmtTime(l.timeSavedMonth)}</td>
+      <td class="minibar-cell">
+        <div class="minibar-track"><div class="minibar-fill" style="width:${clamp(Math.abs(l.profitMonth)/maxAbs*100,0,100)}%; background:${l.color}"></div></div>
+      </td>
+    </tr>
+  `).join('');
+
+  const depRow = `
+    <tr class="dep-row">
+      <td><div class="line-name"><span class="swatch" style="background:#C4574B"></span>Depreciación del escáner (${document.getElementById('depYears').value} años)</div></td>
+      <td class="num">—</td>
+      <td class="num">—</td>
+      <td class="num">−${fmtUSD(r.depreciationMonthly).slice(1)}</td>
+      <td class="num">—</td>
+      <td class="minibar-cell">
+        <div class="minibar-track"><div class="minibar-fill" style="width:${clamp(r.depreciationMonthly/maxAbs*100,0,100)}%; background:#C4574B"></div></div>
+      </td>
+    </tr>
+  `;
+
+  const totalRow = `
+    <tr class="total-row">
+      <td>Total neto mensual</td>
+      <td class="num"></td>
+      <td class="num">${fmtUSD(r.totalRevenueMonth)}</td>
+      <td class="num">${fmtUSD(r.netMonthly)}</td>
+      <td class="num">${fmtTime(r.totalTimeSavedMonth)}</td>
+      <td></td>
+    </tr>
+  `;
+
+  el.innerHTML = `
+    <thead>
+      <tr>
+        <th>Línea de tratamiento</th>
+        <th class="num">Casos/mes</th>
+        <th class="num">Ingreso/mes</th>
+        <th class="num">Ganancia/mes</th>
+        <th class="num">Tiempo ahorrado/mes</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>${rows}${depRow}${totalRow}</tbody>
+  `;
+}
+
+/* ---------------------------------------------------------
+   RENDER: PER-LINE HINTS (ahorro por caso, bajo cada input)
+--------------------------------------------------------- */
+function renderHints(r){
+  r.lineResults.forEach(l => {
+    const hint = document.getElementById(`hint-${l.id}`);
+    if (hint){
+      hint.textContent = `Ahorro por caso: ${fmtUSD(l.savingPerCase)} · ${fmtTime(l.timeSavedPerCase)} ahorrados`;
+    }
+  });
+}
+
+/* ---------------------------------------------------------
+   DISCLAIMER
+--------------------------------------------------------- */
+function renderDisclaimer(state){
+  document.getElementById('disclaimerText').textContent =
+    `Cálculo basado en la comparación de flujo de trabajo analógico vs. digital (tiempo de sillón, material de impresión, envíos a laboratorio y remakes evitados). La tarifa por caso se usa igual en ambos flujos, por lo que el punto de equilibrio y la ganancia neta reflejan únicamente ahorro de costo y tiempo — no un aumento de precio al paciente. Supuestos actuales: tarifa dentista US$${state.dentistRate}/h, tarifa asistente US$${state.assistantRate}/h, vida útil del escáner de ${state.depYears} años. Los resultados son una proyección y pueden variar según la configuración final del equipo y la casuística de cada consultorio.`;
+}
+
+/* ---------------------------------------------------------
+   MAIN RENDER LOOP
+--------------------------------------------------------- */
+function renderAll(){
+  const state = readState();
+  const r = computeResults(state);
+  renderHero(r);
+  renderStats(r);
+  renderChart(r);
+  renderTable(r);
+  renderHints(r);
+  renderDisclaimer(state);
+}
+
+/* ---------------------------------------------------------
+   EVENTS
+--------------------------------------------------------- */
+document.querySelectorAll('input[type=number]').forEach(inp => {
+  inp.addEventListener('input', renderAll);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('price').value = DEFAULTS.price;
+  document.getElementById('dentistRate').value = DEFAULTS.dentistRate;
+  document.getElementById('assistantRate').value = DEFAULTS.assistantRate;
+  document.getElementById('depYears').value = DEFAULTS.depYears;
+  LINES.forEach(l => {
+    document.getElementById(`vol-${l.id}`).value = l.defaultVol;
+    document.getElementById(`fee-${l.id}`).value = l.defaultFee;
+  });
+  document.getElementById('advToggle').open = false;
+  renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>
